@@ -1,3 +1,5 @@
+from time import time
+
 from flask import Flask, render_template, request
 import pymysql
 import creds  # download creds.py from Blackboard — do NOT push to GitHub
@@ -123,6 +125,31 @@ def price_form_post():
     """
     text = request.form['text']
     return viewprices(text)
+
+@app.route("/timequerytextbox", methods=['GET'])
+def time_form():
+    """
+    GET handler: renders the empty search form.
+    The 'fieldname' variable fills in the label text in textbox.html.
+    """
+    return render_template('textbox.html', fieldname="Milliseconds")
+
+@app.route("/timequerytextbox", methods=['POST'])
+def time_form_post():
+    """
+    POST handler: reads the value the user typed into the form,
+    then runs a query to return tracks with Milliseconds <= that value.
+    """
+    rows = execute_query("""
+        SELECT ArtistId, Artist.Name, Track.Name, UnitPrice, Milliseconds
+        FROM Artist
+        JOIN Album USING (ArtistID)
+        JOIN Track USING (AlbumID)
+        WHERE Milliseconds > %s
+        ORDER BY Milliseconds DESC
+        LIMIT 500
+    """, (str(time),))
+    return display_html(rows)
 
 
 # ---------------------------------------------------------------------------
